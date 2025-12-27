@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport d'Intervention #{{ intervention.id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 14px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+        .section { margin-bottom: 25px; }
+        h1 { color: #1e293b; font-size: 24px; margin: 0; }
+        h2 { color: #475569; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8fafc; font-weight: bold; color: #64748b; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-terminee { background-color: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Rapport d'Intervention</h1>
+        <p>Référence: #{{ intervention.id }} | Date: {{ "now"|date("d/m/Y") }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Détails</h2>
+        <table>
+            <tr>
+                <th>Machine</th>
+                <td>{{ intervention.machine.reference }} ({{ intervention.machine.modele }})</td>
+            </tr>
+            <tr>
+                <th>Client</th>
+                <td>{{ intervention.machine.client.nom ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <th>Technicien</th>
+                <td>{{ intervention.technicien.user.prenom }} {{ intervention.technicien.user.nom }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ intervention.type }}</td>
+            </tr>
+            <tr>
+                <th>Statut</th>
+                <td>
+                    <span class="badge status-{{ intervention.statut|lower }}">{{ intervention.statut }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Description & Résolution</h2>
+        <p><strong>Description:</strong><br>{{ intervention.description }}</p>
+        {% if intervention.resolution %}
+            <p><strong>Résolution:</strong><br>{{ intervention.resolution }}</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h2>Coûts</h2>
+        <table>
+            <tr>
+                <th>Durée Réelle</th>
+                <td>{{ intervention.dureeReelle }} minutes</td>
+            </tr>
+            <tr>
+                <th>Taux Horaire</th>
+                <td>{{ intervention.tauxHoraireApplique }} €/h</td>
+            </tr>
+            <tr>
+                <th>Coût Total</th>
+                <td><strong>{{ intervention.coutTotal }} €</strong></td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
