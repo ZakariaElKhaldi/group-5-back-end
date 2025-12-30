@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/machines')]
 class MachineController extends AbstractController
@@ -68,6 +69,7 @@ class MachineController extends AbstractController
     }
 
     #[Route('', name: 'api_machines_create', methods: ['POST'])]
+    #[IsGranted('ROLE_RECEPTIONIST')]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -100,6 +102,7 @@ class MachineController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_machines_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_RECEPTIONIST')]
     public function update(int $id, Request $request): JsonResponse
     {
         $machine = $this->machineRepository->find($id);
@@ -138,6 +141,7 @@ class MachineController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_machines_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
     {
         $machine = $this->machineRepository->find($id);

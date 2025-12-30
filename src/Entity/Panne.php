@@ -33,6 +33,14 @@ class Panne
     #[Groups(['panne:read'])]
     private ?string $gravite = null; // Faible, Moyenne, Elevee
 
+    #[ORM\Column(length: 50)]
+    #[Groups(['panne:read'])]
+    private ?string $statut = 'Declaree'; // Declaree, En traitement, Resolue
+
+    #[ORM\OneToOne(cascade: ['persist'])]
+    #[Groups(['panne:read'])]
+    private ?Intervention $intervention = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -85,4 +93,29 @@ class Panne
 
         return $this;
     }
+
+    public function getStatut(): ?string
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(string $statut): static
+    {
+        $this->statut = $statut;
+
+        return $this;
+    }
+
+    public function getIntervention(): ?Intervention
+    {
+        return $this->intervention;
+    }
+
+    public function setIntervention(?Intervention $intervention): static
+    {
+        $this->intervention = $intervention;
+
+        return $this;
+    }
 }
+

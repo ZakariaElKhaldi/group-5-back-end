@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -29,6 +30,22 @@ class Client
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['client:read'])]
     private ?string $email = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['client:read'])]
+    private ?string $adresse = null;
+
+    #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['client:read'])]
+    private ?string $ice = null; // Identifiant Commun de l'Entreprise (Morocco)
+
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['client:read'])]
+    private ?string $rc = null; // Registre du Commerce
+
+    #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['client:read'])]
+    private ?string $patente = null; // Taxe Professionnelle
 
     #[ORM\Column]
     #[Groups(['client:read'])]
@@ -120,6 +137,54 @@ class Client
                 $machine->setClient(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAdresse(): ?string
+    {
+        return $this->adresse;
+    }
+
+    public function setAdresse(?string $adresse): static
+    {
+        $this->adresse = $adresse;
+
+        return $this;
+    }
+
+    public function getIce(): ?string
+    {
+        return $this->ice;
+    }
+
+    public function setIce(?string $ice): static
+    {
+        $this->ice = $ice;
+
+        return $this;
+    }
+
+    public function getRc(): ?string
+    {
+        return $this->rc;
+    }
+
+    public function setRc(?string $rc): static
+    {
+        $this->rc = $rc;
+
+        return $this;
+    }
+
+    public function getPatente(): ?string
+    {
+        return $this->patente;
+    }
+
+    public function setPatente(?string $patente): static
+    {
+        $this->patente = $patente;
 
         return $this;
     }

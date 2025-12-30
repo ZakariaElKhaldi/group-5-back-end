@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\InterventionRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -92,6 +94,28 @@ class Intervention
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(['intervention:read'])]
     private ?\DateTimeInterface $confirmationClientAt = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['intervention:read'])]
+    private ?string $signatureClient = null; // Base64 encoded signature image
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['intervention:read'])]
+    private ?string $signerNom = null; // Name of person who signed
+
+    #[ORM\OneToMany(mappedBy: 'intervention', targetEntity: PieceIntervention::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['intervention:read'])]
+    private Collection $piecesUtilisees;
+
+    #[ORM\OneToMany(mappedBy: 'intervention', targetEntity: InterventionLog::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[Groups(['intervention:read'])]
+    private Collection $logs;
+
+    public function __construct()
+    {
+        $this->piecesUtilisees = new ArrayCollection();
+        $this->logs = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -347,8 +371,93 @@ class Intervention
         if ($dureeMinutes !== null && $this->tauxHoraireApplique !== null) {
             $dureeHeures = $dureeMinutes / 60;
             $this->coutMainOeuvre = round($dureeHeures * $this->tauxHoraireApplique, 2);
+            // Calculate parts cost from piecesUtilisees if available
+            $this->coutPieces = $this->getCoutPiecesCalcule();
             $this->coutTotal = round($this->coutMainOeuvre + ($this->coutPieces ?? 0), 2);
             $this->duree = sprintf('%dh %02dm', floor($dureeMinutes / 60), $dureeMinutes % 60);
         }
     }
+
+    /**
+     * @return Collection<int, PieceIntervention>
+     */
+    public function getPiecesUtilisees(): Collection
+    {
+        return $this->piecesUtilisees;
+    }
+
+    public function addPieceUtilisee(PieceIntervention $pieceIntervention): static
+    {
+        if (!$this->piecesUtilisees->contains($pieceIntervention)) {
+            $this->piecesUtilisees->add($pieceIntervention);
+            $pieceIntervention->setIntervention($this);
+        }
+        return $this;
+    }
+
+    public function removePieceUtilisee(PieceIntervention $pieceIntervention): static
+    {
+        if ($this->piecesUtilisees->removeElement($pieceIntervention)) {
+            if ($pieceIntervention->getIntervention() === $this) {
+                $pieceIntervention->setIntervention(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * Calculate total parts cost from piecesUtilisees
+     */
+    #[Groups(['intervention:read'])]
+    public function getCoutPiecesCalcule(): float
+    {
+        $total = 0.0;
+        foreach ($this->piecesUtilisees as $pieceIntervention) {
+            $total += $pieceIntervention->getCoutLigne();
+        }
+        return round($total, 2);
+    }
+
+    public function getSignatureClient(): ?string
+    {
+        return $this->signatureClient;
+    }
+
+    public function setSignatureClient(?string $signatureClient): static
+    {
+        $this->signatureClient = $signatureClient;
+
+        return $this;
+    }
+
+    public function getSignerNom(): ?string
+    {
+        return $this->signerNom;
+    }
+
+    public function setSignerNom(?string $signerNom): static
+    {
+        $this->signerNom = $signerNom;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, InterventionLog>
+     */
+    public function getLogs(): Collection
+    {
+        return $this->logs;
+    }
+
+    public function addLog(InterventionLog $log): static
+    {
+        if (!$this->logs->contains($log)) {
+            $this->logs->add($log);
+            $log->setIntervention($this);
+        }
+
+        return $this;
+    }
 }
+

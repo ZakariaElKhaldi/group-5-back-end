@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture #{{ invoice_number }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12px; color: #333; padding: 30px; }
+        
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 3px solid #f59e0b; padding-bottom: 20px; }
+        .logo-section { width: 50%; }
+        .company-name { font-size: 24px; font-weight: bold; color: #1e293b; margin-bottom: 5px; }
+        .company-slogan { font-size: 11px; color: #64748b; margin-bottom: 10px; }
+        .company-info { font-size: 10px; line-height: 1.5; color: #475569; }
+        
+        .invoice-title { text-align: right; }
+        .invoice-title h1 { font-size: 28px; color: #f59e0b; margin-bottom: 5px; }
+        .invoice-number { font-size: 14px; color: #64748b; }
+        .invoice-date { font-size: 11px; color: #94a3b8; }
+        
+        .identifiers { background: #f8fafc; padding: 15px; margin-bottom: 25px; border-radius: 5px; }
+        .identifiers-grid { display: table; width: 100%; }
+        .id-item { display: table-cell; width: 25%; text-align: center; }
+        .id-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .id-value { font-size: 11px; font-weight: bold; color: #1e293b; }
+        
+        .parties { margin-bottom: 25px; }
+        .parties-row { display: table; width: 100%; }
+        .party { display: table-cell; width: 48%; vertical-align: top; padding: 15px; background: #f8fafc; border-radius: 5px; }
+        .party-spacer { display: table-cell; width: 4%; }
+        .party-title { font-size: 10px; text-transform: uppercase; color: #94a3b8; margin-bottom: 8px; letter-spacing: 1px; }
+        .party-name { font-size: 14px; font-weight: bold; color: #1e293b; margin-bottom: 5px; }
+        .party-detail { font-size: 10px; color: #64748b; line-height: 1.6; }
+        
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .items-table th { background: #1e293b; color: white; padding: 10px 8px; font-size: 10px; text-transform: uppercase; text-align: left; }
+        .items-table th:last-child, .items-table td:last-child { text-align: right; }
+        .items-table td { padding: 12px 8px; border-bottom: 1px solid #e2e8f0; font-size: 11px; }
+        .items-table tr:nth-child(even) { background: #f8fafc; }
+        
+        .totals { width: 300px; margin-left: auto; }
+        .total-row { display: table; width: 100%; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
+        .total-label { display: table-cell; width: 60%; font-size: 11px; color: #64748b; }
+        .total-value { display: table-cell; width: 40%; text-align: right; font-size: 11px; font-weight: bold; }
+        .total-row.grand { background: #f59e0b; margin-top: 10px; padding: 12px 10px; border-radius: 5px; }
+        .total-row.grand .total-label, .total-row.grand .total-value { color: white; font-size: 14px; }
+        
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 9px; color: #94a3b8; text-align: center; }
+        
+        .signature-section { margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 5px; }
+        .signature-title { font-size: 11px; font-weight: bold; margin-bottom: 10px; }
+        .signature-image { max-width: 200px; max-height: 80px; border-bottom: 1px solid #333; }
+        .signer-name { font-size: 10px; color: #64748b; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-section">
+            <div class="company-name">{{ company.name }}</div>
+            <div class="company-slogan">Maintenance Industrielle Professionnelle</div>
+            <div class="company-info">
+                {{ company.address }}<br>
+                Tél: {{ company.phone }} | Email: {{ company.email }}
+            </div>
+        </div>
+        <div class="invoice-title">
+            <h1>FACTURE</h1>
+            <div class="invoice-number">N° {{ invoice_number }}</div>
+            <div class="invoice-date">Date: {{ invoice_date|date('d/m/Y') }}</div>
+        </div>
+    </div>
+    
+    <!-- Legal Identifiers (Morocco) -->
+    <div class="identifiers">
+        <div class="identifiers-grid">
+            <div class="id-item">
+                <div class="id-label">ICE</div>
+                <div class="id-value">{{ company.ice }}</div>
+            </div>
+            <div class="id-item">
+                <div class="id-label">R.C.</div>
+                <div class="id-value">{{ company.rc }}</div>
+            </div>
+            <div class="id-item">
+                <div class="id-label">Patente</div>
+                <div class="id-value">{{ company.patente }}</div>
+            </div>
+            <div class="id-item">
+                <div class="id-label">I.F.</div>
+                <div class="id-value">{{ company.if }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Parties -->
+    <div class="parties">
+        <div class="parties-row">
+            <div class="party">
+                <div class="party-title">Émetteur</div>
+                <div class="party-name">{{ company.name }}</div>
+                <div class="party-detail">
+                    {{ company.address }}<br>
+                    ICE: {{ company.ice }}
+                </div>
+            </div>
+            <div class="party-spacer"></div>
+            <div class="party">
+                <div class="party-title">Client</div>
+                <div class="party-name">{{ client.nom }}</div>
+                <div class="party-detail">
+                    {% if client.adresse %}{{ client.adresse }}<br>{% endif %}
+                    {% if client.ice %}ICE: {{ client.ice }}<br>{% endif %}
+                    {% if client.rc %}R.C.: {{ client.rc }} | {% endif %}
+                    {% if client.patente %}Patente: {{ client.patente }}{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Intervention Details -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width: 40%;">Désignation</th>
+                <th style="width: 15%;">Machine</th>
+                <th style="width: 15%;">Durée</th>
+                <th style="width: 15%;">Taux</th>
+                <th style="width: 15%;">Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <strong>Intervention {{ intervention.type|capitalize }}</strong><br>
+                    <span style="color: #64748b; font-size: 10px;">{{ intervention.description|slice(0, 100) }}{% if intervention.description|length > 100 %}...{% endif %}</span>
+                </td>
+                <td>{{ intervention.machine.reference }}</td>
+                <td>{{ intervention.dureeReelle ?? 0 }} min</td>
+                <td>{{ intervention.tauxHoraireApplique|number_format(2, ',', ' ') }} DH/h</td>
+                <td>{{ intervention.coutMainOeuvre|number_format(2, ',', ' ') }} DH</td>
+            </tr>
+            {% if intervention.piecesUtilisees|length > 0 %}
+                {% for pieceIntervention in intervention.piecesUtilisees %}
+                <tr>
+                    <td>
+                        Pièce: {{ pieceIntervention.piece.nom }}<br>
+                        <span style="color: #64748b; font-size: 10px;">Réf: {{ pieceIntervention.piece.reference }}</span>
+                    </td>
+                    <td>-</td>
+                    <td>x{{ pieceIntervention.quantite }}</td>
+                    <td>{{ pieceIntervention.prixUnitaire|number_format(2, ',', ' ') }} DH</td>
+                    <td>{{ pieceIntervention.coutLigne|number_format(2, ',', ' ') }} DH</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+    
+    <!-- Totals -->
+    <div class="totals">
+        <div class="total-row">
+            <div class="total-label">Sous-total HT</div>
+            <div class="total-value">{{ subtotal|number_format(2, ',', ' ') }} DH</div>
+        </div>
+        <div class="total-row">
+            <div class="total-label">TVA (20%)</div>
+            <div class="total-value">{{ tva|number_format(2, ',', ' ') }} DH</div>
+        </div>
+        <div class="total-row grand">
+            <div class="total-label">TOTAL TTC</div>
+            <div class="total-value">{{ total_ttc|number_format(2, ',', ' ') }} DH</div>
+        </div>
+    </div>
+    
+    <!-- Signature (if present) -->
+    {% if intervention.signatureClient %}
+    <div class="signature-section">
+        <div class="signature-title">Signature du Client</div>
+        <img src="{{ intervention.signatureClient }}" class="signature-image" alt="Signature">
+        {% if intervention.signerNom %}
+            <div class="signer-name">{{ intervention.signerNom }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="footer">
+        Cette facture est générée électroniquement et fait foi de document comptable.<br>
+        {{ company.name }} - {{ company.address }} - ICE: {{ company.ice }}
+    </div>
+</body>
+</html>

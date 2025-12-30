@@ -37,11 +37,18 @@ security:
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
+    
+    # Role hierarchy: Admin inherits from Receptionist, Receptionist inherits from User
+    role_hierarchy:
+        ROLE_RECEPTIONIST: ROLE_USER
+        ROLE_ADMIN: [ROLE_RECEPTIONIST, ROLE_TECHNICIEN]
+    
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/qr, roles: PUBLIC_ACCESS }
+        - { path: ^/api/invoices, roles: PUBLIC_ACCESS }
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Controller-level security is used for finer control
 
 when@test:
     security:

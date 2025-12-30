@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Intervention;
 use App\Entity\Panne;
 use App\Repository\PanneRepository;
 use App\Repository\MachineRepository;
@@ -61,17 +62,39 @@ class PanneController extends AbstractController
             return $this->json(['error' => 'Machine not found'], Response::HTTP_NOT_FOUND);
         }
 
+        // Create the Panne
         $panne = new Panne();
         $panne->setMachine($machine);
         $panne->setDateDeclaration(new \DateTime($data['dateDeclaration'] ?? 'now'));
         $panne->setDescription($data['description'] ?? '');
         $panne->setGravite($data['gravite'] ?? 'Moyenne');
+        $panne->setStatut('En traitement');
+
+        // AUTO-CREATE an Intervention linked to this Panne
+        $intervention = new Intervention();
+        $intervention->setMachine($machine);
+        $intervention->setType('corrective');
+        $intervention->setStatut('En attente');
+        $intervention->setDateDebut(new \DateTime());
+        $intervention->setDescription($data['description'] ?? 'Panne signalée');
+
+        // Map gravite to priorite
+        $prioriteMap = [
+            'Faible' => 'Normale',
+            'Moyenne' => 'Elevee',
+            'Elevee' => 'Urgente',
+        ];
+        $intervention->setPriorite($prioriteMap[$panne->getGravite()] ?? 'Normale');
+
+        // Link panne to intervention
+        $panne->setIntervention($intervention);
 
         $errors = $this->validator->validate($panne);
         if (count($errors) > 0) {
             return $this->json(['errors' => (string) $errors], Response::HTTP_BAD_REQUEST);
         }
 
+        $this->em->persist($intervention);
         $this->em->persist($panne);
         $this->em->flush();
 
@@ -79,3 +102,4 @@ class PanneController extends AbstractController
         return new JsonResponse($responseData, Response::HTTP_CREATED, [], true);
     }
 }
+

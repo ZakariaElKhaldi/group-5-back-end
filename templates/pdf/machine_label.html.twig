@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Étiquette Machine</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: DejaVu Sans, Arial, sans-serif; 
+            font-size: 10px; 
+            padding: 5px;
+        }
+        .label {
+            display: table;
+            width: 100%;
+            height: 100%;
+            border: 2px solid #333;
+            border-radius: 5px;
+            padding: 8px;
+        }
+        .qr-section {
+            display: table-cell;
+            width: 110px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .qr-section img {
+            width: 100px;
+            height: 100px;
+        }
+        .info-section {
+            display: table-cell;
+            vertical-align: middle;
+            padding-left: 10px;
+        }
+        .machine-ref {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .machine-model {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 3px;
+        }
+        .machine-info {
+            font-size: 9px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+        .company-logo {
+            font-size: 8px;
+            color: #f59e0b;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="label">
+        <div class="qr-section">
+            <img src="{{ qr_code }}" alt="QR Code">
+        </div>
+        <div class="info-section">
+            <div class="machine-ref">{{ machine.reference }}</div>
+            <div class="machine-model">{{ machine.modele }}</div>
+            <div class="machine-info">
+                Marque: {{ machine.marque ?? 'N/A' }}<br>
+                Type: {{ machine.type ?? 'N/A' }}<br>
+                {% if machine.client %}
+                    Client: {{ machine.client.nom }}
+                {% endif %}
+            </div>
+            <div class="company-logo">MaintenancePro</div>
+        </div>
+    </div>
+</body>
+</html>

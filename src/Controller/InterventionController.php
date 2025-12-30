@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/interventions')]
 class InterventionController extends AbstractController
@@ -44,6 +45,7 @@ class InterventionController extends AbstractController
         $limit = $request->query->getInt('limit', 10);
         $statut = $request->query->get('statut', '');
         $priorite = $request->query->get('priorite', '');
+        $technicienId = $request->query->getInt('technicien', 0);
 
         $qb = $this->interventionRepository->createQueryBuilder('i')
             ->leftJoin('i.machine', 'm')
@@ -59,6 +61,12 @@ class InterventionController extends AbstractController
         if ($priorite) {
             $qb->andWhere('i.priorite = :priorite')
                 ->setParameter('priorite', $priorite);
+        }
+
+        // Filter by technician ID (for technician dashboard)
+        if ($technicienId > 0) {
+            $qb->andWhere('t.id = :technicienId')
+                ->setParameter('technicienId', $technicienId);
         }
 
         $qb->setFirstResult(($page - 1) * $limit)
@@ -81,6 +89,7 @@ class InterventionController extends AbstractController
     }
 
     #[Route('', name: 'api_interventions_create', methods: ['POST'])]
+    #[IsGranted('ROLE_RECEPTIONIST')]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -300,6 +309,7 @@ class InterventionController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_interventions_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
     {
         $intervention = $this->interventionRepository->find($id);
@@ -312,4 +322,49 @@ class InterventionController extends AbstractController
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
+
+    #[Route('/{id}/logs', name: 'api_interventions_add_log', methods: ['POST'])]
+    public function addLog(int $id, Request $request): JsonResponse
+    {
+        $intervention = $this->interventionRepository->find($id);
+        if (!$intervention) {
+            return $this->json(['error' => 'Intervention not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $user = $this->getUser();
+
+        $log = new \App\Entity\InterventionLog();
+        $log->setUser($user);
+        $log->setMessage($data['message'] ?? '');
+        $log->setType($data['type'] ?? 'comment');
+
+        $intervention->addLog($log);
+        $this->em->flush();
+
+        $responseData = $this->serializer->serialize($intervention, 'json', ['groups' => 'intervention:read']);
+        return new JsonResponse($responseData, Response::HTTP_CREATED, [], true);
+    }
+
+    #[Route('/{id}/sign', name: 'api_interventions_sign', methods: ['POST'])]
+    public function sign(int $id, Request $request): JsonResponse
+    {
+        $intervention = $this->interventionRepository->find($id);
+        if (!$intervention) {
+            return $this->json(['error' => 'Intervention not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        $intervention->setSignatureClient($data['signature'] ?? null);
+        $intervention->setSignerNom($data['signerNom'] ?? null);
+        $intervention->setConfirmationClient(true);
+        $intervention->setConfirmationClientAt(new \DateTime());
+
+        $this->em->flush();
+
+        $responseData = $this->serializer->serialize($intervention, 'json', ['groups' => 'intervention:read']);
+        return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+    }
 }
+

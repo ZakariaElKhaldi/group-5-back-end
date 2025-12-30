@@ -43,6 +43,16 @@ class AppFixtures extends Fixture
         $tech->setStatut('Disponible');
         $manager->persist($tech);
 
+        // Receptionist
+        $receptionist = new \App\Entity\User();
+        $receptionist->setEmail('reception@local.host');
+        $receptionist->setRoles(['ROLE_RECEPTIONIST']);
+        $receptionist->setNom('Réception');
+        $receptionist->setPrenom('Bureau');
+        $passwordReception = $this->hasher->hashPassword($receptionist, 'password');
+        $receptionist->setPassword($passwordReception);
+        $manager->persist($receptionist);
+
         $manager->flush();
     }
 }

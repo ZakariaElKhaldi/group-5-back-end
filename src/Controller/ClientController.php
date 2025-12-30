@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/clients')]
 class ClientController extends AbstractController
@@ -44,6 +45,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('', name: 'api_clients_create', methods: ['POST'])]
+    #[IsGranted('ROLE_RECEPTIONIST')]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -66,6 +68,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_clients_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_RECEPTIONIST')]
     public function update(int $id, Request $request): JsonResponse
     {
         $client = $this->clientRepository->find($id);
@@ -94,6 +97,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_clients_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(int $id): JsonResponse
     {
         $client = $this->clientRepository->find($id);
