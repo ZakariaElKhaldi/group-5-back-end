@@ -29,17 +29,34 @@ class PieceRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    /**
-     * Search pieces by reference or name
-     * @return Piece[]
-     */
-    public function search(string $query): array
+    public function findBySearch(array $params)
     {
-        return $this->createQueryBuilder('p')
-            ->where('p.reference LIKE :query OR p.nom LIKE :query')
-            ->setParameter('query', '%' . $query . '%')
-            ->orderBy('p.nom', 'ASC')
+        $page = (int) ($params['page'] ?? 1);
+        $limit = (int) ($params['limit'] ?? 10);
+        $search = $params['search'] ?? null;
+
+        $qb = $this->createQueryBuilder('p');
+
+        if ($search) {
+            $qb->andWhere('p.reference LIKE :search OR p.nom LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        $countQb = clone $qb;
+        $totalItems = $countQb->select('COUNT(p.id)')
             ->getQuery()
-            ->getResult();
+            ->getSingleScalarResult();
+
+        $qb->orderBy('p.nom', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        return [
+            'items' => $qb->getQuery()->getResult(),
+            'total' => (int) $totalItems,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => (int) ceil($totalItems / $limit)
+        ];
     }
 }

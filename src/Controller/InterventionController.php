@@ -6,6 +6,7 @@ use App\Entity\Intervention;
 use App\Entity\Panne;
 use App\Repository\InterventionRepository;
 use App\Repository\MachineRepository;
+use App\Repository\PanneRepository;
 use App\Repository\TechnicienRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,6 +34,7 @@ class InterventionController extends AbstractController
         private InterventionRepository $interventionRepository,
         private MachineRepository $machineRepository,
         private TechnicienRepository $technicienRepository,
+        private PanneRepository $panneRepository,
         private SerializerInterface $serializer,
         private ValidatorInterface $validator
     ) {
@@ -41,39 +43,17 @@ class InterventionController extends AbstractController
     #[Route('', name: 'api_interventions_index', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 10);
-        $statut = $request->query->get('statut', '');
-        $priorite = $request->query->get('priorite', '');
-        $technicienId = $request->query->getInt('technicien', 0);
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search'),
+            'statut' => $request->query->get('statut'),
+            'priorite' => $request->query->get('priorite'),
+            'technicien' => $request->query->getInt('technicien')
+        ];
 
-        $qb = $this->interventionRepository->createQueryBuilder('i')
-            ->leftJoin('i.machine', 'm')
-            ->leftJoin('i.technicien', 't')
-            ->addSelect('m', 't')
-            ->orderBy('i.dateDebut', 'DESC');
-
-        if ($statut) {
-            $qb->andWhere('i.statut = :statut')
-                ->setParameter('statut', $statut);
-        }
-
-        if ($priorite) {
-            $qb->andWhere('i.priorite = :priorite')
-                ->setParameter('priorite', $priorite);
-        }
-
-        // Filter by technician ID (for technician dashboard)
-        if ($technicienId > 0) {
-            $qb->andWhere('t.id = :technicienId')
-                ->setParameter('technicienId', $technicienId);
-        }
-
-        $qb->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
-
-        $interventions = $qb->getQuery()->getResult();
-        $data = $this->serializer->serialize($interventions, 'json', ['groups' => 'intervention:read']);
+        $result = $this->interventionRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'intervention:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 
@@ -136,6 +116,7 @@ class InterventionController extends AbstractController
             $panne->setDateDeclaration(new \DateTime());
             $panne->setDescription($data['panneDescription'] ?? $data['description'] ?? 'Panne signalée');
             $panne->setGravite($data['panneGravite'] ?? 'Moyenne');
+            $panne->setIntervention($intervention); // FIX: Bidirectional link
             $this->em->persist($panne);
         }
 
@@ -179,6 +160,12 @@ class InterventionController extends AbstractController
                 // Only update frozen rate if not already set
                 if ($intervention->getTauxHoraireApplique() === null) {
                     $intervention->setTauxHoraireApplique($technicien->getTauxHoraire());
+                }
+
+                // SYNC: Update linked panne status when technician assigned
+                $panne = $intervention->getPanne();
+                if ($panne && $panne->getStatut() === 'Declaree') {
+                    $panne->setStatut('En traitement');
                 }
             }
         }
@@ -244,6 +231,12 @@ class InterventionController extends AbstractController
                 // Update technician status
                 if ($intervention->getTechnicien()) {
                     $intervention->getTechnicien()->setStatut('Disponible');
+                }
+
+                // Sync panne status - mark linked panne as resolved
+                $linkedPanne = $this->panneRepository->findOneBy(['intervention' => $intervention]);
+                if ($linkedPanne && $linkedPanne->getStatut() !== 'Resolue') {
+                    $linkedPanne->setStatut('Resolue');
                 }
                 break;
 

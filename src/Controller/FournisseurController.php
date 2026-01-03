@@ -25,10 +25,16 @@ class FournisseurController extends AbstractController
     }
 
     #[Route('', name: 'api_fournisseurs_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $fournisseurs = $this->fournisseurRepository->findAll();
-        $data = $this->serializer->serialize($fournisseurs, 'json', ['groups' => 'fournisseur:read']);
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search')
+        ];
+
+        $result = $this->fournisseurRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'fournisseur:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 

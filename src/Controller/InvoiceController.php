@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\InterventionRepository;
+use App\Repository\SettingsRepository;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,22 +14,16 @@ use Twig\Environment;
 #[Route('/api/invoices')]
 class InvoiceController extends AbstractController
 {
-    // Company details (hardcoded for this demo - should be in config/parameters)
-    private const COMPANY = [
-        'name' => 'MaintenancePro SARL',
-        'address' => '123 Boulevard Mohammed V, Casablanca 20000, Maroc',
-        'phone' => '+212 522 123 456',
-        'email' => 'contact@maintenancepro.ma',
-        'ice' => '001234567890123',
-        'rc' => 'RC 123456',
-        'patente' => '12345678',
-        'if' => '12345678',
-    ];
-
     public function __construct(
         private InterventionRepository $interventionRepository,
+        private SettingsRepository $settingsRepository,
         private Environment $twig
     ) {
+    }
+
+    private function getCompanyInfo(): array
+    {
+        return $this->settingsRepository->getCompanyInfo();
     }
 
     #[Route('/intervention/{id}', name: 'api_invoice_intervention', methods: ['GET'])]
@@ -56,7 +51,7 @@ class InvoiceController extends AbstractController
         $html = $this->twig->render('pdf/invoice_maroc.html.twig', [
             'intervention' => $intervention,
             'client' => $client,
-            'company' => self::COMPANY,
+            'company' => $this->getCompanyInfo(),
             'invoice_number' => $invoiceNumber,
             'invoice_date' => new \DateTime(),
             'subtotal' => $subtotal,
@@ -107,7 +102,7 @@ class InvoiceController extends AbstractController
         $html = $this->twig->render('pdf/invoice_maroc.html.twig', [
             'intervention' => $intervention,
             'client' => $client,
-            'company' => self::COMPANY,
+            'company' => $this->getCompanyInfo(),
             'invoice_number' => $invoiceNumber,
             'invoice_date' => new \DateTime(),
             'subtotal' => $subtotal,

@@ -26,10 +26,16 @@ class ClientController extends AbstractController
     }
 
     #[Route('', name: 'api_clients_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $clients = $this->clientRepository->findAll();
-        $data = $this->serializer->serialize($clients, 'json', ['groups' => 'client:read']);
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search')
+        ];
+
+        $result = $this->clientRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'client:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 
@@ -54,6 +60,10 @@ class ClientController extends AbstractController
         $client->setNom($data['nom'] ?? '');
         $client->setTelephone($data['telephone'] ?? null);
         $client->setEmail($data['email'] ?? null);
+        $client->setAdresse($data['adresse'] ?? null);
+        $client->setIce($data['ice'] ?? null);
+        $client->setRc($data['rc'] ?? null);
+        $client->setPatente($data['patente'] ?? null);
 
         $errors = $this->validator->validate($client);
         if (count($errors) > 0) {
@@ -84,6 +94,14 @@ class ClientController extends AbstractController
             $client->setTelephone($data['telephone']);
         if (isset($data['email']))
             $client->setEmail($data['email']);
+        if (isset($data['adresse']))
+            $client->setAdresse($data['adresse']);
+        if (isset($data['ice']))
+            $client->setIce($data['ice']);
+        if (isset($data['rc']))
+            $client->setRc($data['rc']);
+        if (isset($data['patente']))
+            $client->setPatente($data['patente']);
 
         $errors = $this->validator->validate($client);
         if (count($errors) > 0) {

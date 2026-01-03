@@ -1,0 +1,167 @@
+### Installing Tailwind CSS as a Vite plugin
+Installing Tailwind CSS as a Vite plugin is the most seamless way to integrate it with frameworks like Laravel, SvelteKit, React Router, Nuxt, and SolidJS.
+
+#### Create your project
+Start by creating a new Vite project if you don’t have one set up already. The most common approach is to use [Create Vite](https://vite.dev/guide/#scaffolding-your-first-vite-project).
+
+```
+npm create vite@latest my-projectcd my-project
+```
+
+
+```
+npm create vite@latest my-projectcd my-project
+```
+
+
+#### Install Tailwind CSS
+Install tailwindcss and @tailwindcss/vite via npm.
+
+```
+tailwindcss
+```
+
+
+```
+@tailwindcss/vite
+```
+
+
+```
+npm install tailwindcss @tailwindcss/vite
+```
+
+
+```
+npm install tailwindcss @tailwindcss/vite
+```
+
+
+#### Configure the Vite plugin
+Add the @tailwindcss/vite plugin to your Vite configuration.
+
+```
+@tailwindcss/vite
+```
+
+
+```
+import { defineConfig } from 'vite'import tailwindcss from '@tailwindcss/vite'export default defineConfig({ plugins: [ tailwindcss(), ],})
+```
+
+
+```
+import { defineConfig } from 'vite'import tailwindcss from '@tailwindcss/vite'export default defineConfig({ plugins: [ tailwindcss(), ],})
+```
+
+
+#### Import Tailwind CSS
+Add an @import to your CSS file that imports Tailwind CSS.
+
+```
+@import
+```
+
+
+```
+@import "tailwindcss";
+```
+
+
+```
+@import "tailwindcss";
+```
+
+
+#### Start your build process
+Run your build process with npm run dev or whatever command is configured in your package.json file.
+
+```
+npm run dev
+```
+
+
+```
+package.json
+```
+
+
+```
+npm run dev
+```
+
+
+```
+npm run dev
+```
+
+
+#### Start using Tailwind in your HTML
+Make sure your compiled CSS is included in the <head> (your framework might handle this for you), then start using Tailwind’s utility classes to style your content.
+
+```
+<head>
+```
+
+
+```
+<!doctype html><html><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <link href="/src/style.css" rel="stylesheet"></head><body> <h1 class="text-3xl font-bold underline"> Hello world! </h1></body></html>
+```
+
+
+```
+<!doctype html><html><head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <link href="/src/style.css" rel="stylesheet"></head><body> <h1 class="text-3xl font-bold underline"> Hello world! </h1></body></html>
+```
+
+[Explore our framework guides](https://tailwindcss.com/docs/installation/framework-guides)
+
+### Tailwind CSS
+- [Documentation](https://tailwindcss.com/docs)
+- [Playground](https://play.tailwindcss.com/)
+- [Blog](https://tailwindcss.com/blog)
+- [Showcase](https://tailwindcss.com/showcase)
+- [Sponsor](https://tailwindcss.com/sponsor)
+[Documentation](https://tailwindcss.com/docs)
+[Playground](https://play.tailwindcss.com/)
+[Blog](https://tailwindcss.com/blog)
+[Showcase](https://tailwindcss.com/showcase)
+[Sponsor](https://tailwindcss.com/sponsor)
+
+### Resources
+- [Refactoring UI](https://www.refactoringui.com)
+- [Headless UI](https://headlessui.com)
+- [Heroicons](https://heroicons.com)
+- [Hero Patterns](https://heropatterns.com)
+[Refactoring UI](https://www.refactoringui.com)
+[Headless UI](https://headlessui.com)
+[Heroicons](https://heroicons.com)
+[Hero Patterns](https://heropatterns.com)
+
+### [Tailwind Plus](https://tailwindcss.com/plus?ref=footer)
+[Tailwind Plus](https://tailwindcss.com/plus?ref=footer)
+- [UI Blocks](https://tailwindcss.com/plus/ui-blocks?ref=footer)
+- [Templates](https://tailwindcss.com/plus/templates?ref=footer)
+- [UI Kit](https://tailwindcss.com/plus/ui-kit?ref=footer)
+[UI Blocks](https://tailwindcss.com/plus/ui-blocks?ref=footer)
+[Templates](https://tailwindcss.com/plus/templates?ref=footer)
+[UI Kit](https://tailwindcss.com/plus/ui-kit?ref=footer)
+
+### Community
+- [GitHub](https://github.com/tailwindlabs/tailwindcss)
+- [Discord](https://tailwindcss.com/sponsor#insiders)
+- [X](https://x.com/tailwindcss)
+[GitHub](https://github.com/tailwindlabs/tailwindcss)
+[Discord](https://tailwindcss.com/sponsor#insiders)
+[X](https://x.com/tailwindcss)
+
+### Tailwind CSS
+- [Documentation](https://tailwindcss.com/docs)
+- [Playground](https://play.tailwindcss.com/)
+- [Blog](https://tailwindcss.com/blog)
+- [Showcase](https://tailwindcss.com/showcase)
+- [Sponsor](https://tailwindcss.com/sponsor)
+[Documentation](https://tailwindcss.com/docs)
+[Playground](https://play.tailwindcss.com/)
+[Blog](https://tailwindcss.com/blog)
+[Showcase](https://tailwindcss.com/showcase)
+[Sponsor](https://tailwindcss.com/sponsor)

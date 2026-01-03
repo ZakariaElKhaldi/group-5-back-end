@@ -52,6 +52,7 @@ class Client
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Machine::class)]
+    #[Groups(['client:read'])] // Show machines count in client list
     private Collection $machines;
 
     public function __construct()

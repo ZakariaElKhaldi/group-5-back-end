@@ -19,7 +19,7 @@ class Technicien
 
     #[ORM\OneToOne(inversedBy: 'technicien', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['technicien:read'])]
+    #[Groups(['technicien:read', 'intervention:read'])] // Added intervention:read to show name in intervention details
     private ?User $user = null;
 
     #[ORM\Column(length: 255)]
@@ -27,7 +27,7 @@ class Technicien
     private ?string $specialite = null;
 
     #[ORM\Column]
-    #[Groups(['technicien:read'])]
+    #[Groups(['technicien:read', 'intervention:read'])] // Show hourly rate in intervention details
     private ?float $tauxHoraire = null;
 
     #[ORM\Column(length: 50)]

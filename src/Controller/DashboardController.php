@@ -7,6 +7,7 @@ use App\Repository\InterventionRepository;
 use App\Repository\TechnicienRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -21,23 +22,18 @@ class DashboardController extends AbstractController
     }
 
     #[Route('/stats', name: 'api_dashboard_stats', methods: ['GET'])]
-    public function stats(): JsonResponse
+    public function stats(Request $request): JsonResponse
     {
-        // Machine counts by status
+        $period = $request->query->get('period', 'month');
+
+        // Machine counts by status (Global)
         $machinesByStatus = $this->machineRepository->createQueryBuilder('m')
             ->select('m.statut, COUNT(m.id) as count')
             ->groupBy('m.statut')
             ->getQuery()
             ->getResult();
 
-        // Intervention counts by status
-        $interventionsByStatus = $this->interventionRepository->createQueryBuilder('i')
-            ->select('i.statut, COUNT(i.id) as count')
-            ->groupBy('i.statut')
-            ->getQuery()
-            ->getResult();
-
-        // Available technicians
+        // Available technicians (Current/Real-time)
         $availableTechniciens = $this->technicienRepository->createQueryBuilder('t')
             ->select('COUNT(t.id)')
             ->where('t.statut = :statut')
@@ -45,7 +41,7 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getSingleScalarResult();
 
-        // Urgent interventions in progress
+        // Urgent interventions (Open)
         $urgentInterventions = $this->interventionRepository->createQueryBuilder('i')
             ->select('COUNT(i.id)')
             ->where('i.priorite = :priorite')
@@ -55,8 +51,67 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getSingleScalarResult();
 
-        // Total maintenance cost
-        $totalCost = $this->interventionRepository->createQueryBuilder('i')
+        // --- Period Comparison Logic ---
+        $now = new \DateTime();
+        $startDateCurrent = clone $now;
+        $startDatePrevious = clone $now;
+
+        if ($period === 'year') {
+            $startDateCurrent->modify('first day of January this year 00:00:00');
+            $startDatePrevious->modify('first day of January last year 00:00:00');
+            $endDatePrevious = clone $startDateCurrent;
+        } elseif ($period === 'quarter') {
+            // Simplification: last 3 months vs 3 months before
+            $startDateCurrent->modify('-3 months 00:00:00');
+            $startDatePrevious->modify('-6 months 00:00:00');
+            $endDatePrevious = clone $startDateCurrent;
+        } else { // month
+            $startDateCurrent->modify('first day of this month 00:00:00');
+            $startDatePrevious->modify('first day of last month 00:00:00');
+            $endDatePrevious = clone $startDateCurrent;
+        }
+
+        // Current period stats
+        $currentInterventionsTotal = $this->interventionRepository->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->where('i.dateDebut >= :start')
+            ->setParameter('start', $startDateCurrent)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $currentCostsTotal = $this->interventionRepository->createQueryBuilder('i')
+            ->select('SUM(i.coutTotal)')
+            ->where('i.statut = :statut')
+            ->andWhere('i.dateDebut >= :start')
+            ->setParameter('statut', 'Terminee')
+            ->setParameter('start', $startDateCurrent)
+            ->getQuery()
+            ->getSingleScalarResult() ?? 0;
+
+        // Previous period stats
+        $previousInterventionsTotal = $this->interventionRepository->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->where('i.dateDebut >= :start')
+            ->andWhere('i.dateDebut < :end')
+            ->setParameter('start', $startDatePrevious)
+            ->setParameter('end', $endDatePrevious)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $previousCostsTotal = $this->interventionRepository->createQueryBuilder('i')
+            ->select('SUM(i.coutTotal)')
+            ->where('i.statut = :statut')
+            ->andWhere('i.dateDebut >= :start')
+            ->andWhere('i.dateDebut < :end')
+            ->setParameter('statut', 'Terminee')
+            ->setParameter('start', $startDatePrevious)
+            ->setParameter('end', $endDatePrevious)
+            ->getQuery()
+            ->getSingleScalarResult() ?? 0;
+
+        // Global stats (all time)
+        $totalInterventions = $this->interventionRepository->count([]);
+        $totalCosts = $this->interventionRepository->createQueryBuilder('i')
             ->select('SUM(i.coutTotal)')
             ->where('i.statut = :statut')
             ->setParameter('statut', 'Terminee')
@@ -69,15 +124,18 @@ class DashboardController extends AbstractController
                 'total' => array_sum(array_column($machinesByStatus, 'count'))
             ],
             'interventions' => [
-                'byStatus' => $interventionsByStatus,
-                'total' => array_sum(array_column($interventionsByStatus, 'count')),
-                'urgent' => (int) $urgentInterventions
+                'total' => (int) $totalInterventions,
+                'urgent' => (int) $urgentInterventions,
+                'currentPeriod' => (int) $currentInterventionsTotal,
+                'previousPeriod' => (int) $previousInterventionsTotal,
             ],
             'techniciens' => [
                 'available' => (int) $availableTechniciens
             ],
             'costs' => [
-                'total' => round((float) $totalCost, 2)
+                'total' => round((float) $totalCosts, 2),
+                'currentPeriod' => round((float) $currentCostsTotal, 2),
+                'previousPeriod' => round((float) $previousCostsTotal, 2),
             ]
         ]);
     }

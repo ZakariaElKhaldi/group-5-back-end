@@ -20,4 +20,42 @@ class TechnicienRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Technicien::class);
     }
+
+    public function findBySearch(array $params)
+    {
+        $page = (int) ($params['page'] ?? 1);
+        $limit = (int) ($params['limit'] ?? 10);
+        $search = $params['search'] ?? null;
+        $statut = $params['statut'] ?? null;
+
+        $qb = $this->createQueryBuilder('t')
+            ->leftJoin('t.user', 'u');
+
+        if ($search) {
+            $qb->andWhere('u.nom LIKE :search OR u.prenom LIKE :search OR t.specialite LIKE :search')
+                ->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($statut) {
+            $qb->andWhere('t.statut = :statut')
+                ->setParameter('statut', $statut);
+        }
+
+        $countQb = clone $qb;
+        $totalItems = $countQb->select('COUNT(t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $qb->orderBy('u.nom', 'ASC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        return [
+            'items' => $qb->getQuery()->getResult(),
+            'total' => (int) $totalItems,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => (int) ceil($totalItems / $limit)
+        ];
+    }
 }

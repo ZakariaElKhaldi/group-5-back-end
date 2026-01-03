@@ -37,7 +37,7 @@ class Panne
     #[Groups(['panne:read'])]
     private ?string $statut = 'Declaree'; // Declaree, En traitement, Resolue
 
-    #[ORM\OneToOne(cascade: ['persist'])]
+    #[ORM\OneToOne(inversedBy: 'panne', cascade: ['persist'])]
     #[Groups(['panne:read'])]
     private ?Intervention $intervention = null;
 

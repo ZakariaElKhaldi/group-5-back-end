@@ -30,19 +30,15 @@ class TechnicienController extends AbstractController
     #[Route('', name: 'api_techniciens_index', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $statut = $request->query->get('statut', '');
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search'),
+            'statut' => $request->query->get('statut')
+        ];
 
-        $qb = $this->technicienRepository->createQueryBuilder('t')
-            ->leftJoin('t.user', 'u')
-            ->addSelect('u');
-
-        if ($statut) {
-            $qb->andWhere('t.statut = :statut')
-                ->setParameter('statut', $statut);
-        }
-
-        $techniciens = $qb->getQuery()->getResult();
-        $data = $this->serializer->serialize($techniciens, 'json', ['groups' => 'technicien:read']);
+        $result = $this->technicienRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'technicien:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 

@@ -30,30 +30,15 @@ class MachineController extends AbstractController
     #[Route('', name: 'api_machines_index', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 10);
-        $search = $request->query->get('search', '');
-        $statut = $request->query->get('statut', '');
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search'),
+            'statut' => $request->query->get('statut')
+        ];
 
-        $qb = $this->machineRepository->createQueryBuilder('m')
-            ->leftJoin('m.client', 'c')
-            ->addSelect('c');
-
-        if ($search) {
-            $qb->andWhere('m.reference LIKE :search OR m.modele LIKE :search')
-                ->setParameter('search', '%' . $search . '%');
-        }
-
-        if ($statut) {
-            $qb->andWhere('m.statut = :statut')
-                ->setParameter('statut', $statut);
-        }
-
-        $qb->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
-
-        $machines = $qb->getQuery()->getResult();
-        $data = $this->serializer->serialize($machines, 'json', ['groups' => 'machine:read']);
+        $result = $this->machineRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'machine:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 

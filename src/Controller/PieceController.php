@@ -30,15 +30,14 @@ class PieceController extends AbstractController
     #[Route('', name: 'api_pieces_index', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $search = $request->query->get('search');
+        $params = [
+            'page' => $request->query->getInt('page', 1),
+            'limit' => $request->query->getInt('limit', 10),
+            'search' => $request->query->get('search'),
+        ];
 
-        if ($search) {
-            $pieces = $this->pieceRepository->search($search);
-        } else {
-            $pieces = $this->pieceRepository->findAll();
-        }
-
-        $data = $this->serializer->serialize($pieces, 'json', ['groups' => 'piece:read']);
+        $result = $this->pieceRepository->findBySearch($params);
+        $data = $this->serializer->serialize($result, 'json', ['groups' => 'piece:read']);
         return new JsonResponse($data, Response::HTTP_OK, [], true);
     }
 

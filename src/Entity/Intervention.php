@@ -15,7 +15,7 @@ class Intervention
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['intervention:read'])]
+    #[Groups(['intervention:read', 'panne:read'])] // Include ID when serializing panne with intervention
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'interventions')]
@@ -110,6 +110,14 @@ class Intervention
     #[ORM\OneToMany(mappedBy: 'intervention', targetEntity: InterventionLog::class, cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['intervention:read'])]
     private Collection $logs;
+
+    #[ORM\OneToOne(mappedBy: 'intervention', targetEntity: Panne::class)]
+    #[Groups(['intervention:read'])]
+    private ?Panne $panne = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['intervention:read'])]
+    private ?int $dureeReelle = null; // Duration in minutes
 
     public function __construct()
     {
@@ -369,6 +377,7 @@ class Intervention
     {
         $dureeMinutes = $this->calculateDureeMinutes();
         if ($dureeMinutes !== null && $this->tauxHoraireApplique !== null) {
+            $this->dureeReelle = $dureeMinutes; // Store actual duration
             $dureeHeures = $dureeMinutes / 60;
             $this->coutMainOeuvre = round($dureeHeures * $this->tauxHoraireApplique, 2);
             // Calculate parts cost from piecesUtilisees if available
@@ -457,6 +466,28 @@ class Intervention
             $log->setIntervention($this);
         }
 
+        return $this;
+    }
+
+    public function getPanne(): ?Panne
+    {
+        return $this->panne;
+    }
+
+    public function setPanne(?Panne $panne): static
+    {
+        $this->panne = $panne;
+        return $this;
+    }
+
+    public function getDureeReelle(): ?int
+    {
+        return $this->dureeReelle;
+    }
+
+    public function setDureeReelle(?int $dureeReelle): static
+    {
+        $this->dureeReelle = $dureeReelle;
         return $this;
     }
 }
